@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>환율계산</title>
+
+    <link rel="stylesheet" href="webjars/bootstrap/4.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{common.css}">
+
+    <script src="webjars/jquery/3.3.1/dist/jquery.min.js"></script>
+    <script src="webjars/bootstrap/4.1.3/dist/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="content">
+        <h1 class="mb-5">환율 계산</h1>
+        <form onsubmit="return false">
+            <div class="form-group row">
+                <label class="col-md-3 col-form-label">송금국가</label>
+                <div class="col-md-9">
+                    <p class="form-control-plaintext">미국(USD)</p>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-3 col-form-label" for="selectCountry">수취국가</label>
+                <div class="col-md-6">
+                    <select id="selectCountry" class="custom-select mr-sm-2">
+                        <option selected value="KRW">한국(KRW)</option>
+                        <option value="JPY">일본(JPY)</option>
+                        <option value="PHP">필리핀(PHP)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-3 col-form-label" for="exchangeRate">환율</label>
+                <div class="col-md-9">
+                    <p class="form-control-plaintext"><strong id="exchangeRate" th:text="${exchangeRate} + ' KRW/USD'"></strong></p>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-3 col-form-label" for="remittanceAmount">송금액</label>
+                <div class="col-md-8 input-group">
+                    <input type="number" id="remittanceAmount" class="form-control">
+                    <div class="input-group-append">
+                        <span class="input-group-text">USD</span> <!-- TODO : 입력이 integer 만 받게 되어있는데 달러의 경우 소수점도 될 수 있어야 한다. -->
+                    </div>
+                    <div id="err-message" class="invalid-feedback">
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="button" id="submitButton" class="btn btn-info">Submit</button>
+            </div>
+        </form>
+        <div id="receivedAmount" class="mt-4"></div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    function submitForm(){
+        var remittanceAmountTag = $('#remittanceAmount');
+        var errMessageTag = $('#err-message');
+        var currency = $('#selectCountry').val();
+        var remittanceAmount = remittanceAmountTag.val();
+
+        $.ajax({
+            url: "/api/exchangeRates/receivedAmount?currency=" + currency + "&remittanceAmount=" + remittanceAmount,
+            type:"GET",
+            success : function (data) {
+                remittanceAmountTag.prop("class", "form-control");
+                $('#receivedAmount').html("<p>수취금액은 <strong>" + data + " "  + currency + "/USD</strong> 입니다.</p>");
+            },
+            error : function (response) {
+                var errorMsg = response.responseJSON[0];
+
+                if (!errorMsg) {
+                    var errMsg = response.responseJSON.message.toString();
+
+                    if (errMsg.indexOf("InvalidFormatException") !== -1) {
+                        remittanceAmountTag.prop("class", "form-control is-invalid");
+                        errMessageTag.text("송금액이 바르지 않습니다");
+                    } else {
+                        alert("통신 오류! \n관리자에게 문의하세요.")
+                    }
+                    return ;
+                }
+
+                remittanceAmountTag.prop("class", "form-control is-invalid");
+                errMessageTag.text(errorMsg['defaultMessage']);
+            }
+        });
+    }
+
+    $('#selectCountry').change(function () {
+        var currency = $(this).val();
+
+        $.ajax({
+            url: "/api/exchangeRates?currency=" + currency,
+            type:"GET",
+            success : function (data) {
+                $('#exchangeRate').text(data + " " + currency + "/USD");
+            },
+            error : function (request) {
+                alert("통신 오류! \n관리자에게 문의하세요.");
+            }
+        });
+    });
+
+    $('#remittanceAmount').keypress(function (e) {
+        if (e.keyCode === 13) {
+            submitForm();
+        }
+    });
+
+    $('#submitButton').click(function () {
+        submitForm();
+    });
+
+</script>
+</body>
+</html>

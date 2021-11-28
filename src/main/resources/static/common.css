@@ -1,0 +1,14 @@
+.content {
+    position: relative;
+    top: 50px;
+    width: 60%;
+    padding: 30px;
+    margin: auto;
+    border: 1px solid darkgray;
+    border-radius: 0.5em;
+}
+
+form label {
+    font-weight: bold;
+    text-align: right;
+}
