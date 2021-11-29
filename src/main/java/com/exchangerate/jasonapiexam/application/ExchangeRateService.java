@@ -34,7 +34,7 @@ public class ExchangeRateService {
     }
 
     public String getRemittanceAmount(ExchangeRate exchangeRateDTO) {
-        return getDicimalFormatNumber(getReceivedAmount(exchangeRateDTO));
+        return getDecimalFormatNumber(getReceivedAmount(exchangeRateDTO));
     }
 
     private double getExchangeRate(String currency) {
@@ -46,7 +46,7 @@ public class ExchangeRateService {
                 .orElseThrow( () -> new GetExchangeRateException("환뷸 정보를 가져오는데 실패 했습니다."));
     }
 
-    private String getDicimalFormatNumber(double number) {
+    private String getDecimalFormatNumber(double number) {
         return new DecimalFormat("###,###.00").format(number);
     }
 
